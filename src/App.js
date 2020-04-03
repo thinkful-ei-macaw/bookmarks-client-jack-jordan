@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Route } from 'react-router-dom';
 import AddBookmark from './AddBookmark/AddBookmark';
 import BookmarkList from './BookmarkList/BookmarkList';
+import EditBookmark from './EditBookmark/EditBookmark';
 import BookmarksContext from './BookmarksContext';
 import Nav from './Nav/Nav';
 import config from './config';
@@ -13,47 +14,61 @@ class App extends Component {
     error: null,
   };
 
-  setBookmarks = bookmarks => {
+  setBookmarks = (bookmarks) => {
     this.setState({
       bookmarks,
       error: null,
-    })
-  }
+    });
+  };
 
-  addBookmark = bookmark => {
+  addBookmark = (bookmark) => {
     this.setState({
-      bookmarks: [ ...this.state.bookmarks, bookmark ],
-    })
-  }
+      bookmarks: [...this.state.bookmarks, bookmark],
+    });
+  };
 
-  deleteBookmark = bookmarkId => {
-    const newBookmarks = this.state.bookmarks.filter(bm =>
-      bm.id !== bookmarkId
-    )
+  deleteBookmark = (bookmarkId) => {
+    const newBookmarks = this.state.bookmarks.filter(
+      (bm) => bm.id !== bookmarkId,
+    );
     this.setState({
-      bookmarks: newBookmarks
-    })
-  }
+      bookmarks: newBookmarks,
+    });
+  };
+
+  updateBookmark = (newBookmark) => {
+    const indexToUpdate = this.state.bookmarks.findIndex(
+      (bookmark) => bookmark.id === newBookmark.id,
+    );
+    const newBookmarks = this.state.bookmarks.map((bookmark, index) => {
+      if (indexToUpdate === index) {
+        return newBookmark;
+      } else return bookmark;
+    });
+    this.setState({
+      bookmarks: newBookmarks,
+    });
+  };
 
   componentDidMount() {
     fetch(config.API_ENDPOINT, {
       method: 'GET',
       headers: {
         'content-type': 'application/json',
-        'Authorization': `Bearer ${config.API_KEY}`
-      }
+        Authorization: `Bearer ${config.API_KEY}`,
+      },
     })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) {
-          return res.json().then(error => Promise.reject(error))
+          return res.json().then((error) => Promise.reject(error));
         }
-        return res.json()
+        return res.json();
       })
       .then(this.setBookmarks)
-      .catch(error => {
-        console.error(error)
-        this.setState({ error })
-      })
+      .catch((error) => {
+        console.error(error);
+        this.setState({ error });
+      });
   }
 
   render() {
@@ -61,22 +76,17 @@ class App extends Component {
       bookmarks: this.state.bookmarks,
       addBookmark: this.addBookmark,
       deleteBookmark: this.deleteBookmark,
-    }
+      updateBookmark: this.updateBookmark,
+    };
     return (
-      <main className='App'>
+      <main className="App">
         <h1>Bookmarks!</h1>
         <BookmarksContext.Provider value={contextValue}>
           <Nav />
-          <div className='content' aria-live='polite'>
-            <Route
-              path='/add-bookmark'
-              component={AddBookmark}
-            />
-            <Route
-              exact
-              path='/'
-              component={BookmarkList}
-            />
+          <div className="content" aria-live="polite">
+            <Route path="/add-bookmark" component={AddBookmark} />
+            <Route exact path="/" component={BookmarkList} />
+            <Route exact path="/edit-bookmark/:id" component={EditBookmark} />
           </div>
         </BookmarksContext.Provider>
       </main>
